@@ -113,7 +113,9 @@ def perform_simplex_iteration(c, A, b, f, res_el):
             new_A[i][j] = A[i][j] - ((A[i][res_el[2]] * A[res_el[1]][j]) / res_el[0])
 
     new_f = f - ((c[res_el[2]] * b[res_el[1]]) / res_el[0])
-    columns[res_el[1]], rows[res_el[2]] = rows[res_el[2]], columns[res_el[1]]
+    temp_row = rows[res_el[1]]
+    rows[res_el[1]] = columns[1+res_el[2]]
+    columns[1+res_el[2]] = temp_row
     return new_c, new_A, new_b, new_f
 
 def execute_simplex(c, A, b, f, minimize):
