@@ -8,5 +8,6 @@ def main():
     f = 0
     print("Answer:", execute_simplex(c, A, b, f, minimize))
 
+
 if __name__ == "__main__":
     main()

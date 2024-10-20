@@ -1,3 +1,18 @@
+columns = []
+rows = []
+
+def init_headers(c, A, b):
+    num_columns = len(c)
+    num_rows = len(b)
+    global columns
+    global rows
+    columns = ['b'] + [f'x{i + 1}' for i in range(num_columns)]
+    rows = []
+    for i in range(num_rows):
+        temp_row = [f'x{i + num_columns + 1}']
+        rows.append(temp_row)
+    rows.append('F')
+
 def validate_simplex_input(c, A, b):
     len_A = len(A[0])
     return (all(len(row) == len_A for row in A) and
@@ -16,16 +31,22 @@ def construct_simplex_table(c, A, b, f):
     table.append([f] + c)
     return table
 
+def format_header_value(value):
+    return " ".join(str(v) for v in value) if isinstance(value, list) else str(value)
 
 def display_simplex_table(simplex_table):
     print()
-    max_width = max(len(str(float(j))) for row in simplex_table for j in row) + 2
-    headers = ["b"] + [f"x{i + 1}" for i in range(len(simplex_table[0]) - 1)]
-    print(" | ".join(f"{header:>{max_width}}" for header in headers))
-    print("-" * (max_width * len(headers) + 3 * (len(headers) - 1)))
-    for row in simplex_table:
-        print(" | ".join(f"{float(j):>{max_width}.2f}" for j in row))
-
+    formatted_columns = [format_header_value(col) for col in columns]
+    formatted_rows = [format_header_value(row) for row in rows]
+    max_width = max(len(str(float(j))) for row in simplex_table for j in row if isinstance(j, (int, float))) + 2
+    full_headers = [""] + formatted_columns  # Добавляем 'b' перед заголовками столбцов
+    print(" | ".join(f"{header:>{max_width}}" for header in full_headers))
+    print("-" * (max_width * len(full_headers) + 3 * (len(full_headers) - 1)))
+    for i, row in enumerate(simplex_table):
+        row_values = [formatted_rows[i]] + list(row)  # Добавляем заголовок для строки 'b'
+        print(" | ".join(
+            f"{float(j):>{max_width}.2f}" if isinstance(j, (int, float)) else str(j).ljust(max_width) for j in
+            row_values))
 
 def locate_resolving_element(c, A, b):
     if not check_solution_existence(c, A, b):
@@ -58,6 +79,7 @@ def calculate_min_ratio(A, b, ratio_col):
     return [A[min_ratio_row][ratio_col], min_ratio_row, ratio_col]
 
 def perform_simplex_iteration(c, A, b, f, res_el):
+    global columns, rows
     new_resolving_element = 1 / res_el[0]
     new_b = [0] * len(b)
     new_A = [[0] * len(A[0]) for _ in A]
@@ -91,11 +113,13 @@ def perform_simplex_iteration(c, A, b, f, res_el):
             new_A[i][j] = A[i][j] - ((A[i][res_el[2]] * A[res_el[1]][j]) / res_el[0])
 
     new_f = f - ((c[res_el[2]] * b[res_el[1]]) / res_el[0])
+    columns[res_el[1]], rows[res_el[2]] = rows[res_el[2]], columns[res_el[1]]
     return new_c, new_A, new_b, new_f
 
 def execute_simplex(c, A, b, f, minimize):
     if validate_simplex_input(c, A, b):
         print("Input Validation: Passed")
+        init_headers(c, A, b)
         if minimize:
             c = [-x for x in c]
         while (max(c) > 0) or (min(b) < 0):
